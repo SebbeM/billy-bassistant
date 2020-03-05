@@ -20,7 +20,8 @@ Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(2);
 
 // Some other Variables we need
-int SoundInPin = A0;
+int SoundRightPin = A0;
+int SoundLeftPin = A1;
 int LedPin = 12; //in case you want an LED to activate while mouth moves
 
 // the setup routine runs once when you press reset:
@@ -36,13 +37,15 @@ void setup() {
   myMotor->run(FORWARD);
   // turn on motor
   myMotor->run(RELEASE);
-     pinMode(SoundInPin, INPUT);
+     pinMode(SoundRightPin, INPUT);
+     pinMode(SoundLeftPin, INPUT);  
      pinMode(LedPin, OUTPUT);
   myOtherMotor->setSpeed(0); //tail motor
   myOtherMotor->run(FORWARD);
   // turn on motor
   myOtherMotor->run(RELEASE);
-     pinMode(SoundInPin, INPUT);  
+     pinMode(SoundRightPin, INPUT);
+     pinMode(SoundLeftPin, INPUT);  
 }
 
 // the loop routine runs over and over again forever:
@@ -50,7 +53,7 @@ void loop() {
   uint8_t i;
   
   // read the input on analog pin 0:
-  int sensorValue = analogRead(SoundInPin);
+  int sensorValue = (analogRead(SoundRightPin) + analogRead(SoundLeftPin)) / 2;
 // we Map another value of this for LED that can be a integer betwen 0..255 
   int LEDValue = map(sensorValue,0,512,0,255);
   // We Map it here down to the possible range of  movement.
@@ -62,9 +65,9 @@ void loop() {
 if (sensorValue > 10) { // to cut off some static readings
    delay(1);  // a static delay to smooth things out...
 // now move the motor 
-   myMotor->run(FORWARD);
+   myOtherMotor->run(FORWARD);
   for (i=140; i<255; i++) {
-    myMotor->setSpeed(i);  
+    myOtherMotor->setSpeed(i);  
   
   }
 
@@ -84,4 +87,3 @@ if (sensorValue > 10) { // to cut off some static readings
       analogWrite(LedPin, 0); 
       // and this repeats all the time.
 }
-
