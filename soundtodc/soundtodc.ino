@@ -15,6 +15,7 @@
 
 bool debug = true;
 const int threshold= 5;
+uint8_t timer;
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -42,8 +43,6 @@ void setup() {
 }
 
 void loop() {
-  uint8_t i;
-  
   // Read the analog input on sound pins:
   int sensorValue = analogRead(SoundPinRight) + analogRead(SoundPinLeft);
   // Map it down to the possible range of  movement:
@@ -56,9 +55,20 @@ void loop() {
     if (debug) {
       Serial.println(sensorValue);
     }
+    timer = 1000;
+    bodyMotor->run(FORWARD);
     mouthMotor->run(FORWARD);
-    delay(50); // Smooth out mouth movements
-  
+    delay(30); // Smooth out movement
+  } else {
     mouthMotor->run(RELEASE);
+    if (debug) {
+      Serial.println(timer);
+    }
+    if (timer == 0) {
+      bodyMotor->run(RELEASE);
+    } else {
+      timer--;
+      delay(1);
+    }
   }
 }
