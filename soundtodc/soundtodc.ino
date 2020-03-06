@@ -5,58 +5,60 @@
    Based on soundtodc by Donald Bell, Maker Project Lab (2016)
    and Sound to Servo by Cenk zdemir (2012)
    and DCMotorTest by Adafruit
+
+  For use with the Adafruit Motor Shield v2 
+  ---->  http://www.adafruit.com/products/1438
 */
 
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 
+bool debug = true;
+const int threshold= 5;
+
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
-// Select which 'port' M1, M2, M3 or M4. In this case, M1 for mouth and M2 for tail
-Adafruit_DCMotor *bodyMotor = AFMS.getMotor(1);
-Adafruit_DCMotor *mouthMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *bodyMotor = AFMS.getMotor(1); // M1
+Adafruit_DCMotor *mouthMotor = AFMS.getMotor(2); // M2
 
-// Some other Variables we need
-int SoundPinRight = A0;
-int SoundPinLeft = A1;
-int LedPin = 12; //in case you want an LED to activate while mouth moves
+int SoundPinRight = A0; // Analog in 0
+int SoundPinLeft = A1; // Analog in 1
+int Led = LED_BUILTIN;
 
-// the setup routine runs once when you press reset:
+// The setup routine runs once when you press reset:
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(9600); // Set up Serial library at 9600 bps
 
+  if (debug) {
+    Serial.println("Starting soundtodc");
+  }
 
-  AFMS.begin();  // create with the default frequency 1.6KHz
+  AFMS.begin();  // Create with the default frequency 1.6KHz
+
+  // Set motors to only run at max speed to minimize noise:
+  mouthMotor->setSpeed(255);
+  bodyMotor->setSpeed(255);
 }
 
-// the loop routine runs over and over again forever:
 void loop() {
   uint8_t i;
   
-  // read the input on sound pins:
-  int sensorValue = (analogRead(SoundPinRight) + analogRead(SoundPinLeft)) / 2;
-  // We Map it here down to the possible range of  movement.
-  sensorValue = map(sensorValue,0,512,0,255);
+  // Read the analog input on sound pins:
+  int sensorValue = analogRead(SoundPinRight) + analogRead(SoundPinLeft);
+  // Map it down to the possible range of  movement:
+  sensorValue = map(sensorValue,0,1024,0,255);
   
+  analogWrite(Led, sensorValue); // Light up LED according to reading
 
-  // maping the same reading a little bit more down to calculate the time your motor gets
-if (sensorValue > 5) { // to cut off some static readings
-  Serial.println(sensorValue);
-  mouthMotor->setSpeed(255);
-  bodyMotor->setSpeed(255);
-   delay(1);  // a static delay to smooth things out...
-// now move the motor 
-   mouthMotor->run(FORWARD);
-   delay(50);
+  // Move mouth when sound level reaches threshold:
+  if (sensorValue > threshold) {
+    if (debug) {
+      Serial.println(sensorValue);
+    }
+    mouthMotor->run(FORWARD);
+    delay(50); // Smooth out mouth movements
   
-  analogWrite(LedPin, sensorValue); 
-         // and do that move in this delay time
-
-  mouthMotor->run(RELEASE);
-  delay(1);
-} // Done.
-   // turn off the led again.
-      analogWrite(LedPin, 0); 
-      // and this repeats all the time.
+    mouthMotor->run(RELEASE);
+  }
 }
