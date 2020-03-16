@@ -30,6 +30,8 @@ import google.auth.transport.grpc
 import google.auth.transport.requests
 import google.oauth2.credentials
 
+import RPi.GPIO as GPIO
+
 from google.assistant.embedded.v1alpha2 import (
     embedded_assistant_pb2,
     embedded_assistant_pb2_grpc
@@ -49,6 +51,11 @@ except (SystemError, ImportError):
     import browser_helpers
     import device_helpers
 
+GPIO.setmode(GPIO.BCM)
+
+GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+GPIO.setup(27, GPIO.OUT)
 
 ASSISTANT_API_ENDPOINT = 'embeddedassistant.googleapis.com'
 END_OF_UTTERANCE = embedded_assistant_pb2.AssistResponse.END_OF_UTTERANCE
@@ -454,7 +461,13 @@ def main(api_endpoint, credentials, project_id,
         wait_for_user_trigger = not once
         while True:
             if wait_for_user_trigger:
-                click.pause(info='Press Enter to send a new request...')
+                input_state = GPIO.input(17)
+                if input_state == True:
+                    GPIO.output(27, False)
+                    continue
+                else:
+                    GPIO.output(27, True)
+                    pass
             continue_conversation = assistant.assist()
             # wait for user trigger if there is no follow-up turn in
             # the conversation.
