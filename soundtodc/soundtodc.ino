@@ -1,16 +1,10 @@
 /*
-  Make a DC Motor Move to Sound.
-  This example code is in the public domain.
-   Created by Sebastian Magnusson
-   Based on soundtodc by Donald Bell, Maker Project Lab (2016)
-   and Sound to Servo by Cenk zdemir (2012)
-   and DCMotorTest by Adafruit
-
-  For use with the Adafruit Motor Shield v2 
-  ---->  http://www.adafruit.com/products/1438
+ * Controls the motors of a Big Mouth Billy Bass to move along
+ * to the sound and actions of a virtual assistant.
+ * 
+ * Author: Sebastian Magnusson https://github.com/SebbeM
 */
 
-#include <Wire.h>
 #include <Adafruit_MotorShield.h>
 
 bool debug = true;
