@@ -8,49 +8,45 @@
 #include <Arduino.h>
 #include <LOLIN_I2C_MOTOR.h>
 
-bool debug = true;
-const int threshold= 5;
+int baud = 115200;
+bool debug = false;
+const int threshold= 10;
 int timer;
 
 LOLIN_I2C_MOTOR motor;
 
 int SoundIn = A0;
-int DigitalIn = 3;
-int Led = LED_BUILTIN;
+int DigitalIn = D3;
 int BODY = MOTOR_CH_A;
 int MOUTH = MOTOR_CH_B;
 
 // The setup routine runs once when you press reset:
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(baud);
   Serial.println("Motor Shield Testing...");
 
-  while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR) //wait motor shield ready.
+  while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR)
   {
     motor.getInfo();
+    Serial.println("Motor Shield Ready");
   }
 
-  if (debug) {
-    Serial.println("Starting soundtodc");
-  }
-
-  motor.changeFreq(MOTOR_CH_BOTH, 1000); //Change A & B 's Frequency to 1000Hz.
+  motor.changeFreq(MOTOR_CH_BOTH, 1600);
   motor.changeDuty(MOTOR_CH_BOTH, 100);
 }
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
   int listening = digitalRead(DigitalIn);
-  sensorValue = map(sensorValue,0,1024,0,255);
-
-  analogWrite(Led, sensorValue); // Light up LED according to reading
 
   if (listening == HIGH) {
     if (debug) {
       Serial.println("Listening");
     }
     motor.changeStatus(BODY, MOTOR_STATUS_CW);
-    timer = 100;
+    timer = 10;
+  } else {
+    motor.changeStatus(BODY, MOTOR_STATUS_STOP);
   }
 
   // Move mouth when sound level reaches threshold:
@@ -58,15 +54,9 @@ void loop() {
     if (debug) {
       Serial.println(sensorValue);
     }
-    motor.changeStatus(MOUTH, MOTOR_STATUS_CCW);
-    delay(10); // Smooth out movement
+    motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
+    //delay(1); // Smooth out movement
   } else {
     motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
-    if (timer == 0) {
-      motor.changeStatus(BODY, MOTOR_STATUS_STOP);
-    } else {
-      timer--;
-      delay(1);
-    }
   }
 }
