@@ -23,14 +23,20 @@ int MOUTH = MOTOR_CH_B;
 
 // The setup routine runs once when you press reset:
 void setup() {
-  Serial.begin(baud);
+  if (debug) {
+    Serial.begin(baud);
+  }
   Wire.begin();
-  Serial.println("Motor Shield Testing...");
+  if (debug) {
+    Serial.println("Motor Shield Testing...");
+  }
 
   while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR)
   {
     motor.getInfo();
-    Serial.println("Motor Shield Ready");
+    if (debug) {
+      Serial.println("Motor Shield Ready");
+    }
   }
 
   motor.changeFreq(MOTOR_CH_BOTH, 1600);
