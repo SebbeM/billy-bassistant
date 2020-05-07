@@ -23,17 +23,15 @@ int MOUTH = MOTOR_CH_B;
 // The setup routine runs once when you press reset:
 void setup() {
   Wire.begin();
-  Serial.begin(baud);
   if (debug) {
-    Serial.println("Motor Shield Testing...");
+    Serial.begin(baud);
   }
 
+  printDebug("Motor Shield Testing...");
   while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR) {
     motor.getInfo();
   }
-  if (debug) {
-    Serial.println("Motor Shield Ready");
-  }
+  printDebug("Motor Shield Ready");
 
   motor.changeFreq(MOTOR_CH_BOTH, 1600);
   motor.changeDuty(MOTOR_CH_BOTH, 100);
@@ -56,18 +54,16 @@ void loop() {
   // Move body when listening signal is received:
   if (millis() - looktime > 500) {
     if (listening == HIGH && !looking) {
-      if (debug) {
-        Serial.println("Listening");
-      }
+      printDebug("Listening");
       looking = true;
+      // Move body out
       motor.changeStatus(BODY, MOTOR_STATUS_CW);
       looktime = millis();
     }
     if (listening == LOW && looking) {
-      if (debug) {
-        Serial.println("Stop listening");
-      }
+      printDebug("Stop listening");
       looking = false;
+      // Move body in
       motor.changeStatus(BODY, MOTOR_STATUS_STOP);
       looktime = millis();
     }
@@ -77,12 +73,20 @@ void loop() {
   if (millis() - talktime > 300) {
     if (sensorValue > threshold && !talking) {
       talking = true;
+      // Open mouth
       motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
       talktime = millis();
     }
-    if (sensorValue < threshold && talking){
+    if (sensorValue < threshold && talking) {
       talking = false;
+      // Close mouth
       motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
     }
+  }
+}
+
+void printDebug(String s) {
+  if (debug) {
+    Serial.println(s);
   }
 }
