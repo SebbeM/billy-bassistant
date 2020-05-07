@@ -35,7 +35,6 @@ void setup() {
 
   motor.changeFreq(MOTOR_CH_BOTH, 1600);
   motor.changeDuty(MOTOR_CH_BOTH, 100);
-  pinMode(DigitalIn, INPUT_PULLUP);
 }
 
 // Keep track of whether or not movement is already activated
