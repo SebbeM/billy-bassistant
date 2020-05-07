@@ -12,7 +12,6 @@
 int baud = 115200;
 bool debug = true;
 const int threshold = 10;
-int timer;
 
 LOLIN_I2C_MOTOR motor;
 
@@ -23,9 +22,9 @@ int MOUTH = MOTOR_CH_B;
 
 // The setup routine runs once when you press reset:
 void setup() {
-Wire.begin();
+  Wire.begin();
+  Serial.begin(baud);
   if (debug) {
-    Serial.begin(baud);
     Serial.println("Motor Shield Testing...");
   }
 
@@ -38,11 +37,13 @@ Wire.begin();
 
   motor.changeFreq(MOTOR_CH_BOTH, 1600);
   motor.changeDuty(MOTOR_CH_BOTH, 100);
+  pinMode(DigitalIn, INPUT_PULLUP);
 }
 
 // Keep track of whether or not movement is already activated
-boolean talking = false;
-boolean looking = false;
+bool talking = false;
+bool looking = false;
+int timer = 0;
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
@@ -52,19 +53,34 @@ void loop() {
   }
 
   // Move body when listening signal is received:
-  if (listening == HIGH && !looking) {
-    if (debug) {
-      Serial.println("Listening");
+  if (timer > 1000) {
+    if (listening == HIGH && !looking) {
+      if (debug) {
+        Serial.println("Listening");
+      }
+      looking = true;
+      motor.changeStatus(BODY, MOTOR_STATUS_CW);
+      timer = 0;
     }
-    motor.changeStatus(BODY, MOTOR_STATUS_CW);
-  } else if (looking) {
-    motor.changeStatus(BODY, MOTOR_STATUS_STOP);
+    if (listening == LOW && looking) {
+      if (debug) {
+        Serial.println("Stop listening");
+      }
+      looking = false;
+      motor.changeStatus(BODY, MOTOR_STATUS_STOP);
+    }
   }
 
   // Move mouth when sound level reaches threshold:
-  if (sensorValue > threshold && !talking) {
-    motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
-  } else if (talking){
-    motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
+  if (timer > 100) {
+    if (sensorValue > threshold && !talking) {
+      talking = true;
+      motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
+    }
+    if (sensorValue < threshold && talking){
+      talking = false;
+      motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
+    }
   }
+  timer++;
 }
