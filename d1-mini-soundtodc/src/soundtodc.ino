@@ -65,7 +65,6 @@ void loop() {
       looking = false;
       // Move body in
       motor.changeStatus(BODY, MOTOR_STATUS_STOP);
-      looktime = millis();
     }
   }
 
