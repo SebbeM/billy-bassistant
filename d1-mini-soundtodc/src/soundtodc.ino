@@ -43,7 +43,8 @@ void setup() {
 // Keep track of whether or not movement is already activated
 bool talking = false;
 bool looking = false;
-int timer = 0;
+unsigned long talktime = 0;
+unsigned long looktime = 0;
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
@@ -53,14 +54,14 @@ void loop() {
   }
 
   // Move body when listening signal is received:
-  if (timer > 1000) {
+  if (millis() - looktime > 500) {
     if (listening == HIGH && !looking) {
       if (debug) {
         Serial.println("Listening");
       }
       looking = true;
       motor.changeStatus(BODY, MOTOR_STATUS_CW);
-      timer = 0;
+      looktime = millis();
     }
     if (listening == LOW && looking) {
       if (debug) {
@@ -68,19 +69,20 @@ void loop() {
       }
       looking = false;
       motor.changeStatus(BODY, MOTOR_STATUS_STOP);
+      looktime = millis();
     }
   }
 
   // Move mouth when sound level reaches threshold:
-  if (timer > 100) {
+  if (millis() - talktime > 300) {
     if (sensorValue > threshold && !talking) {
       talking = true;
       motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
+      talktime = millis();
     }
     if (sensorValue < threshold && talking){
       talking = false;
       motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
     }
   }
-  timer++;
 }
