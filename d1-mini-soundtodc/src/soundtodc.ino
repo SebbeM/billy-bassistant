@@ -23,25 +23,26 @@ int MOUTH = MOTOR_CH_B;
 
 // The setup routine runs once when you press reset:
 void setup() {
+Wire.begin();
   if (debug) {
     Serial.begin(baud);
-  }
-  Wire.begin();
-  if (debug) {
     Serial.println("Motor Shield Testing...");
   }
 
-  while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR)
-  {
+  while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR) {
     motor.getInfo();
-    if (debug) {
-      Serial.println("Motor Shield Ready");
-    }
+  }
+  if (debug) {
+    Serial.println("Motor Shield Ready");
   }
 
   motor.changeFreq(MOTOR_CH_BOTH, 1600);
   motor.changeDuty(MOTOR_CH_BOTH, 100);
 }
+
+// Keep track of whether or not movement is already activated
+boolean talking = false;
+boolean looking = false;
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
@@ -51,19 +52,19 @@ void loop() {
   }
 
   // Move body when listening signal is received:
-  if (listening == HIGH) {
+  if (listening == HIGH && !looking) {
     if (debug) {
       Serial.println("Listening");
     }
     motor.changeStatus(BODY, MOTOR_STATUS_CW);
-  } else {
+  } else if (looking) {
     motor.changeStatus(BODY, MOTOR_STATUS_STOP);
   }
 
   // Move mouth when sound level reaches threshold:
-  if (sensorValue > threshold) {
+  if (sensorValue > threshold && !talking) {
     motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
-  } else {
+  } else if (talking){
     motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
   }
 }
