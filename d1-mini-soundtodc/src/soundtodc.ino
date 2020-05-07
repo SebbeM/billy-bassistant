@@ -6,11 +6,12 @@
 */
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <LOLIN_I2C_MOTOR.h>
 
 int baud = 115200;
-bool debug = false;
-const int threshold= 10;
+bool debug = true;
+const int threshold = 10;
 int timer;
 
 LOLIN_I2C_MOTOR motor;
@@ -23,6 +24,7 @@ int MOUTH = MOTOR_CH_B;
 // The setup routine runs once when you press reset:
 void setup() {
   Serial.begin(baud);
+  Wire.begin();
   Serial.println("Motor Shield Testing...");
 
   while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR)
@@ -38,24 +40,23 @@ void setup() {
 void loop() {
   int sensorValue = analogRead(SoundIn);
   int listening = digitalRead(DigitalIn);
+  if (debug) {
+    Serial.println(sensorValue);
+  }
 
+  // Move body when listening signal is received:
   if (listening == HIGH) {
     if (debug) {
       Serial.println("Listening");
     }
     motor.changeStatus(BODY, MOTOR_STATUS_CW);
-    timer = 10;
   } else {
     motor.changeStatus(BODY, MOTOR_STATUS_STOP);
   }
 
   // Move mouth when sound level reaches threshold:
   if (sensorValue > threshold) {
-    if (debug) {
-      Serial.println(sensorValue);
-    }
     motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
-    //delay(1); // Smooth out movement
   } else {
     motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
   }
