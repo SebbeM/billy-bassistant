@@ -10,7 +10,7 @@
 #include <LOLIN_I2C_MOTOR.h>
 
 int baud = 115200;
-bool debug = true;
+int debug = 2;
 const int threshold = 10;
 
 LOLIN_I2C_MOTOR motor;
@@ -23,15 +23,15 @@ int MOUTH = MOTOR_CH_B;
 // The setup routine runs once when you press reset:
 void setup() {
   Wire.begin();
-  if (debug) {
+  if (debug > 0) {
     Serial.begin(baud);
   }
 
-  printDebug("Motor Shield Testing...");
+  printDebug(2, "Motor Shield Testing...");
   while (motor.PRODUCT_ID != PRODUCT_ID_I2C_MOTOR) {
     motor.getInfo();
   }
-  printDebug("Motor Shield Ready");
+  printDebug(2, "Motor Shield Ready");
 
   motor.changeFreq(MOTOR_CH_BOTH, 1600);
   motor.changeDuty(MOTOR_CH_BOTH, 100);
@@ -40,27 +40,25 @@ void setup() {
 // Keep track of whether or not movement is already activated
 bool talking = false;
 bool looking = false;
-unsigned long talktime = 0;
-unsigned long looktime = 0;
+unsigned long talktime = millis();
+unsigned long looktime = millis();
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
   int listening = digitalRead(DigitalIn);
-  if (debug) {
-    Serial.println(sensorValue);
-  }
+  printDebug(4, "" + sensorValue);
 
   // Move body when listening signal is received:
-  if (millis() - looktime > 500) {
+  if (millis() - talktime > 500) {
     if (listening == HIGH && !looking) {
-      printDebug("Listening");
+      printDebug(3, "Listening");
       looking = true;
       // Move body out
       motor.changeStatus(BODY, MOTOR_STATUS_CW);
       looktime = millis();
     }
     if (listening == LOW && looking) {
-      printDebug("Stop listening");
+      printDebug(3, "Stop listening");
       looking = false;
       // Move body in
       motor.changeStatus(BODY, MOTOR_STATUS_STOP);
@@ -79,12 +77,13 @@ void loop() {
       talking = false;
       // Close mouth
       motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
+      talktime = millis();
     }
   }
 }
 
-void printDebug(String s) {
-  if (debug) {
+void printDebug(int level, String s) {
+  if (debug >= level) {
     Serial.println(s);
   }
 }
