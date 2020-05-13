@@ -11,7 +11,7 @@
 
 int baud = 115200;
 int debug = 2;
-const int threshold = 10;
+const int threshold = 8;
 
 LOLIN_I2C_MOTOR motor;
 
@@ -66,7 +66,7 @@ void loop() {
   }
 
   // Move mouth when sound level reaches threshold:
-  if (millis() - talktime > 300) {
+  if (millis() - talktime > 50) {
     if (sensorValue > threshold && !talking) {
       talking = true;
       // Open mouth
@@ -77,7 +77,6 @@ void loop() {
       talking = false;
       // Close mouth
       motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
-      talktime = millis();
     }
   }
 }
