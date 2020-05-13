@@ -40,7 +40,7 @@ void setup() {
 // Keep track of whether or not movement is already activated
 bool talking = false;
 bool looking = false;
-unsigned long talktime = millis(); // Timestamp for mouth movement triggers
+unsigned long talkTime = millis(); // Timestamp for mouth movement triggers
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
@@ -63,7 +63,7 @@ void loop() {
 
   // Open mouth when sound level reaches threshold:
   if (sensorValue > threshold) {
-    talktime = millis() + sensorValue;
+    talkTime = millis() + sensorValue;
     if (!talking) {
       printDebug(3, "Opening mouth at " + String(sensorValue));
       talking = true;
@@ -71,7 +71,8 @@ void loop() {
       motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
     }
   }
-  else if (talking && millis() - talktime > 0) {
+  // Close mouth when sound is under threshold and enough time has passed
+  else if (talking && millis() - talkTime > 0) {
     printDebug(3, "Closing mouth at " + String(sensorValue));
     talking = false;
     // Close mouth
