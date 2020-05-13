@@ -9,9 +9,9 @@
 #include <Wire.h>
 #include <LOLIN_I2C_MOTOR.h>
 
-int baud = 115200;
-int debug = 2;
-const int threshold = 8;
+const int baud = 115200;
+const unsigned char debug = 0; // Debug level. 1: Errors, 2: Setup, 3: Activity, 4: Sensor
+const unsigned short threshold = 40; // Lowest sound level to trigger mouth movement
 
 LOLIN_I2C_MOTOR motor;
 
@@ -40,44 +40,42 @@ void setup() {
 // Keep track of whether or not movement is already activated
 bool talking = false;
 bool looking = false;
-unsigned long talktime = millis();
-unsigned long looktime = millis();
+unsigned long talktime = millis(); // Timestamp for mouth movement triggers
 
 void loop() {
   int sensorValue = analogRead(SoundIn);
   int listening = digitalRead(DigitalIn);
-  printDebug(4, "" + sensorValue);
+  printDebug(4, String(sensorValue));
 
   // Move body when listening signal is received:
-  if (millis() - talktime > 500) {
-    if (listening == HIGH && !looking) {
-      printDebug(3, "Listening");
-      looking = true;
-      // Move body out
-      motor.changeStatus(BODY, MOTOR_STATUS_CW);
-      looktime = millis();
-    }
-    if (listening == LOW && looking) {
-      printDebug(3, "Stop listening");
-      looking = false;
-      // Move body in
-      motor.changeStatus(BODY, MOTOR_STATUS_STOP);
-    }
+  if (listening == HIGH && !looking) {
+    printDebug(3, "Listening");
+    looking = true;
+    // Move body out
+    motor.changeStatus(BODY, MOTOR_STATUS_CW);
+  }
+  if (listening == LOW && looking) {
+    printDebug(3, "Stop listening");
+    looking = false;
+    // Move body in
+    motor.changeStatus(BODY, MOTOR_STATUS_STOP);
   }
 
-  // Move mouth when sound level reaches threshold:
-  if (millis() - talktime > 50) {
-    if (sensorValue > threshold && !talking) {
+  // Open mouth when sound level reaches threshold:
+  if (sensorValue > threshold) {
+    talktime = millis() + sensorValue;
+    if (!talking) {
+      printDebug(3, "Opening mouth at " + String(sensorValue));
       talking = true;
       // Open mouth
       motor.changeStatus(MOUTH, MOTOR_STATUS_CW);
-      talktime = millis();
     }
-    if (sensorValue < threshold && talking) {
-      talking = false;
-      // Close mouth
-      motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
-    }
+  }
+  else if (talking && millis() - talktime > 0) {
+    printDebug(3, "Closing mouth at " + String(sensorValue));
+    talking = false;
+    // Close mouth
+    motor.changeStatus(MOUTH, MOTOR_STATUS_STOP);
   }
 }
 
